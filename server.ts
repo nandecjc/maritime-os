@@ -7,7 +7,6 @@ import { fileURLToPath } from "url";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 
-// Extend Express Request type
 interface AuthRequest extends Request {
   user?: any;
 }
@@ -17,7 +16,6 @@ const __dirname = path.dirname(__filename);
 
 const JWT_SECRET = "maritime-os-secret-key-2026";
 
-// Initial System Data
 const USERS = [
   { 
     id: "U-001", 
@@ -113,7 +111,6 @@ async function startServer() {
 
   app.use(express.json());
 
-  // Auth Middleware
   const authenticateToken = (req: any, res: any, next: any) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -165,7 +162,7 @@ async function startServer() {
   });
 
   app.post("/api/auth/signup", async (req, res) => {
-    const { email, password, name } = req.body;
+    const { email, password, name, organization } = req.body;
     if (USERS.find(u => u.email === email)) {
       return res.status(400).json({ error: "User already exists" });
     }
@@ -176,7 +173,7 @@ async function startServer() {
       password: hashedPassword, 
       role: "user", 
       name,
-      organization: "New Organization",
+      organization: organization || "Independent Operator",
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${name}`
     };
     USERS.push(newUser);
@@ -209,7 +206,6 @@ async function startServer() {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Update user in system database
     if (name) USERS[userIndex].name = name;
     if (email) USERS[userIndex].email = email;
     if (organization) USERS[userIndex].organization = organization;
@@ -218,7 +214,6 @@ async function startServer() {
 
     const updatedUser = USERS[userIndex];
     
-    // Generate new token with updated info
     const token = jwt.sign({ 
       id: updatedUser.id, 
       email: updatedUser.email, 
@@ -241,7 +236,6 @@ async function startServer() {
     });
   });
 
-  // Protected API Endpoints
   app.get("/api/ships", authenticateToken, (req, res) => {
     res.json(SHIPS);
   });
@@ -249,7 +243,6 @@ async function startServer() {
   app.get("/api/ships/:id", authenticateToken, (req, res) => {
     const ship = SHIPS.find(s => s.id === req.params.id);
     if (ship) {
-      // Enhance with telemetry and insights for the detail vie
       const enhancedShip = {
         ...ship,
         telemetry: {
@@ -309,11 +302,10 @@ async function startServer() {
     if (status) cargo.status = status;
     
     if (ship_id !== undefined && ship_id !== cargo.ship_id) {
-      // Remove from old ship
+    
       const oldShip = SHIPS.find(s => s.id === cargo.ship_id);
       if (oldShip) oldShip.cargo_id = "";
 
-      // Add to new ship
       const newShip = SHIPS.find(s => s.id === ship_id);
       if (newShip) {
         newShip.cargo_id = cargo.id;
@@ -365,7 +357,6 @@ async function startServer() {
     });
   });
 
-  // Real-time Simulation
   io.on("connection", (socket) => {
     console.log("Client connected");
     
@@ -378,7 +369,6 @@ async function startServer() {
       });
       socket.emit("vessel_updates", SHIPS);
 
-      // Randomly generate notifications
       if (Math.random() < 0.1) {
         const types = [
           { type: "congestion", message: "High congestion reported at Port of Durban.", severity: "high" },
@@ -405,7 +395,7 @@ async function startServer() {
     });
   });
 
-  // Vite middleware for development
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
