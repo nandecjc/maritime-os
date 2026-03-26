@@ -76,5 +76,3 @@ Welcome to the **Maritime OS** demo guide. This document is designed to help you
 *   **Admin User:** `admin@maritime.os` / `admin123`
 *   **Standard User:** `user@maritime.os` / `user123`
 
----
-*Generated for Maritime OS Deployment v2.4*
